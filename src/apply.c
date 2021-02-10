@@ -21,6 +21,7 @@ static void light_cocktail(struct obj **);
 static int rub_ok(struct obj *);
 static void display_jump_positions(int);
 static void use_tinning_kit(struct obj *);
+static void use_meat_grinder(struct obj *);
 static void use_figurine(struct obj **);
 static int grease_ok(struct obj *);
 static void use_grease(struct obj *);
@@ -1916,6 +1917,24 @@ tinnable(struct obj *corpse)
     return 1;
 }
 
+boolean
+grindable(struct obj *corpse)
+{
+    if (corpse->oeaten)
+        return 0;
+    if (!mons[corpse->corpsenm].cnutrit)
+        return 0;
+    if (!is_animal(&mons[corpse->corpsenm]))
+        return 0;
+    /* Not sure if the following are necessary because of is_animal(),
+     * but let's be safe */
+    if (humanoid(&mons[corpse->corpsenm]))
+        return 0;
+    if (amorphous(&mons[corpse->corpsenm]))
+        return 0;
+    return 1;
+}
+
 static void
 use_tinning_kit(struct obj *obj)
 {
@@ -1985,6 +2004,81 @@ use_tinning_kit(struct obj *obj)
                                    doname(can), (const char *) 0);
     } else
         impossible("Tinning failed.");
+}
+
+static void
+use_meat_grinder(struct obj *obj)
+{
+    struct obj *corpse, *ration;
+
+    /* This takes only 1 move.  If this is to be changed to take many
+     * moves, we've got to deal with decaying corpses...
+     */
+    if (obj->spe <= 0) {
+        You("seem to be out of dog-food wrappers.");
+        return;
+    }
+    if (!(corpse = floorfood("grind", 3)))
+        return;
+    if (corpse->oeaten) {
+        You("cannot grind %s which is partly eaten.", something);
+        return;
+    }
+    if (touch_petrifies(&mons[corpse->corpsenm]) && !Stone_resistance
+        && !uarmg) {
+        char kbuf[BUFSZ];
+
+        if (poly_when_stoned(g.youmonst.data))
+            You("grind %s without wearing gloves.",
+                an(mons[corpse->corpsenm].pmnames[NEUTRAL]));
+        else {
+            pline("Grinding %s without wearing gloves is a fatal mistake...",
+                  an(mons[corpse->corpsenm].pmnames[NEUTRAL]));
+            Sprintf(kbuf, "trying to grind %s without gloves",
+                    an(mons[corpse->corpsenm].pmnames[NEUTRAL]));
+        }
+        instapetrify(kbuf);
+    }
+    if (is_rider(&mons[corpse->corpsenm])) {
+        if (revive_corpse(corpse))
+            verbalize("Yes...  But War does not preserve its enemies...");
+        else
+            pline_The("corpse evades your grasp.");
+        return;
+    }
+    if (mons[corpse->corpsenm].cnutrit < 20) {
+        pline("That's too insubstantial to grind.");
+        return;
+    }
+    if (mons[corpse->corpsenm].cnutrit > 60) {
+        pline("That's too large to grind.");
+        return;
+    }
+    consume_obj_charge(obj, TRUE);
+
+    if ((ration = mksobj(TRIPE_RATION, FALSE, FALSE)) != 0) {
+        static const char you_buy_it[] = "You grind it, you bought it!";
+
+        ration->corpsenm = corpse->corpsenm;
+        ration->cursed = obj->cursed;
+        ration->blessed = obj->blessed;
+        //ration->owt = weight(ration);
+        ration->known = 1;
+        /* Mark tinned tins. No spinach allowed... */
+        //set_tin_variety(ration, HOMEMADE_TIN);
+        if (carried(corpse)) {
+            if (corpse->unpaid)
+                verbalize(you_buy_it);
+            useup(corpse);
+        } else {
+            if (costly_spot(corpse->ox, corpse->oy) && !corpse->no_charge)
+                verbalize(you_buy_it);
+            useupf(corpse, 1L);
+        }
+        (void) hold_another_object(ration, "You make, but cannot pick up, %s.",
+                                   doname(ration), (const char *) 0);
+    } else
+        impossible("Grinding failed.");
 }
 
 void
@@ -3766,6 +3860,9 @@ doapply(void)
         break;
     case TINNING_KIT:
         use_tinning_kit(obj);
+        break;
+    case MEAT_GRINDER:
+        use_meat_grinder(obj);
         break;
     case LEASH:
         res = use_leash(obj);

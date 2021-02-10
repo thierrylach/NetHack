@@ -4456,7 +4456,7 @@ cost_per_charge(
     } else if (otmp->oclass == SPBOOK_CLASS) {
         tmp -= tmp / 5L;
     } else if (otmp->otyp == CAN_OF_GREASE || otmp->otyp == TINNING_KIT
-               || otmp->otyp == EXPENSIVE_CAMERA) {
+                   || otmp->otyp == EXPENSIVE_CAMERA || otmp->otyp == MEAT_GRINDER) {
         tmp /= 10L;
     } else if (otmp->otyp == POT_OIL) {
         tmp /= 5L;

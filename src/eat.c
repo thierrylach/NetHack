@@ -42,6 +42,7 @@ static boolean maybe_cannibal(int, boolean);
 static int eat_ok(struct obj *);
 static int offer_ok(struct obj *);
 static int tin_ok(struct obj *);
+static int grind_ok(struct obj *);
 
 /* also used to see if you're allowed to eat cats and dogs */
 #define CANNIBAL_ALLOWED() (Role_if(PM_CAVE_DWELLER) || Race_if(PM_ORC))
@@ -3178,12 +3179,27 @@ tin_ok(struct obj *obj)
     return GETOBJ_SUGGEST;
 }
 
+/* getobj callback for object to be ground */
+static int
+grind_ok(struct obj *obj)
+{
+    if (!obj || obj->oclass != FOOD_CLASS)
+        return GETOBJ_EXCLUDE;
+
+    if (obj->otyp != CORPSE || !grindable(obj))
+        return GETOBJ_EXCLUDE_SELECTABLE;
+
+    return GETOBJ_SUGGEST;
+}
+
+
+
 /* Returns an object representing food.
  * Object may be either on floor or in inventory.
  */
 struct obj *
 floorfood(const char *verb,
-          int corpsecheck) /* 0, no check, 1, corpses, 2, tinnable corpses */
+          int corpsecheck) /* 0, no check, 1, corpses, 2, tinnable corpses, 3, grindable corpses */
 {
     register struct obj *otmp;
     char qbuf[QBUFSZ];
@@ -3300,12 +3316,14 @@ floorfood(const char *verb,
         otmp = getobj("sacrifice", offer_ok, GETOBJ_NOFLAGS);
     else if (corpsecheck == 2)
         otmp = getobj(verb, tin_ok, GETOBJ_NOFLAGS);
+    else if (corpsecheck == 3)
+        otmp = getobj(verb, grind_ok, GETOBJ_NOFLAGS);
     else {
         impossible("floorfood: unknown request (%s)", verb);
         return (struct obj *) 0;
     }
     if (corpsecheck && otmp && !(offering && otmp->oclass == AMULET_CLASS))
-        if (otmp->otyp != CORPSE || (corpsecheck == 2 && !tinnable(otmp))) {
+        if (otmp->otyp != CORPSE || (corpsecheck == 2 && !tinnable(otmp) || (corpsecheck == 3 && !grindable(otmp)))) {
             You_cant("%s that!", verb);
             return (struct obj *) 0;
         }

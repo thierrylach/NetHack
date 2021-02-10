@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetHackW", "NetHackW.vcxproj", "{CEC5D360-8804-454F-8591-002184C23499}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -68,6 +68,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "NetHackPackage", "NetHackPackage.wapproj", "{6838EC9D-F25D-4779-9CD7-2EDB61E49429}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data Files", "Data Files", "{9D83316B-0156-4850-9A9D-167AEE5A5826}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\share\objects.txt = ..\..\share\objects.txt
+		..\..\..\sys\winnt\sysconf = ..\..\..\sys\winnt\sysconf
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

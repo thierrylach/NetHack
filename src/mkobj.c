@@ -877,6 +877,7 @@ mksobj(int otyp, boolean init, boolean artif)
             case EXPENSIVE_CAMERA:
             case TINNING_KIT:
             case MAGIC_MARKER:
+            case MEAT_GRINDER:
                 otmp->spe = rn1(70, 30);
                 break;
             case CAN_OF_GREASE:

@@ -688,6 +688,7 @@ recharge(struct obj* obj, int curse_bless)
             break;
         case MAGIC_MARKER:
         case TINNING_KIT:
+        case MEAT_GRINDER:
         case EXPENSIVE_CAMERA:
             if (is_cursed) {
                 stripspe(obj);
