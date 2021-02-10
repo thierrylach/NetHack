@@ -3742,13 +3742,15 @@ optfn_windowborders(int optidx, int req, boolean negated, char *opts, char *op)
                 itmp = 0; /* Off */
             else if (op == empty_optstr)
                 itmp = 1; /* On */
-            else /* Value supplied; expect 0 (off), 1 (on), or 2 (auto) */
+            else /* Value supplied; expect 0 (off), 1 (on), 2 (auto)
+                  * or 3 (on for most windows, off for perm_invent)
+                  * or 4 (auto for most windows, off for perm_invent) */
                 itmp = atoi(op);
 
-            if (itmp < 0 || itmp > 2) {
-                config_error_add("Invalid %s (should be 0, 1, or 2): %s",
+            if (itmp < 0 || itmp > 4) {
+                config_error_add("Invalid %s (should be within 0 to 4): %s",
                                  allopt[optidx].name, opts);
-                retval = optn_err;
+                retval = optn_silenterr;
             } else {
                 iflags.wc2_windowborders = itmp;
             }
@@ -3762,7 +3764,11 @@ optfn_windowborders(int optidx, int req, boolean negated, char *opts, char *op)
                 (iflags.wc2_windowborders == 0) ? "0=off"
                 : (iflags.wc2_windowborders == 1) ? "1=on"
                   : (iflags.wc2_windowborders == 2) ? "2=auto"
-                    : defopt);
+                    : (iflags.wc2_windowborders == 3)
+                      ? "3=on, except off for perm_invent"
+                      : (iflags.wc2_windowborders == 4)
+                        ? "4=auto, except off for perm_invent"
+                        : defopt);
         return optn_ok;
     }
     return optn_ok;
@@ -7101,6 +7107,34 @@ optfn_o_status_hilites(int optidx UNUSED, int req, boolean negated UNUSED,
     return optn_ok;
 }
 #endif /*STATUS_HILITES*/
+
+/* Get string value of configuration option.
+ * Currently handles only boolean and compound options.
+ */
+char *
+get_option_value(const char *optname)
+{
+    static char retbuf[BUFSZ];
+    boolean *bool_p;
+    int i;
+
+    for (i = 0; allopt[i].name != 0; i++)
+        if (!strcmp(optname, allopt[i].name)) {
+            if (allopt[i].opttyp == BoolOpt && (bool_p = allopt[i].addr) != 0) {
+                Sprintf(retbuf, "%s", *bool_p ? "true" : "false");
+                return retbuf;
+            } else if (allopt[i].opttyp == CompOpt && allopt[i].optfn) {
+                int reslt = optn_err;
+
+                reslt = (*allopt[i].optfn)(allopt[i].idx, get_val,
+                                           FALSE, retbuf, empty_optstr);
+                if (reslt == optn_ok && retbuf[0])
+                    return retbuf;
+                return (char *) 0;
+            }
+        }
+    return (char *) 0;
+}
 
 /* the 'O' command */
 int
