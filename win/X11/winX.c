@@ -1,4 +1,4 @@
-/* NetHack 3.7	winX.c	$NHDT-Date: 1612656277 2021/02/07 00:04:37 $  $NHDT-Branch: NetHack-3.7 $:$NHDT-Revision: 1.93 $ */
+/* NetHack 3.7	winX.c	$NHDT-Date: 1613444929 2021/02/16 03:08:49 $  $NHDT-Branch: NetHack-3.7 $:$NHDT-Revision: 1.98 $ */
 /* Copyright (c) Dean Luick, 1992                                 */
 /* NetHack may be freely redistributed.  See license for details. */
 
@@ -158,7 +158,7 @@ static void X11_sig_cb(XtPointer, XtSignalId *);
 #endif
 static void d_timeout(XtPointer, XtIntervalId *);
 static void X11_hangup(Widget, XEvent *, String *, Cardinal *);
-static void X11_bail(const char *);
+static void X11_bail(const char *) NORETURN;
 static void askname_delete(Widget, XEvent *, String *, Cardinal *);
 static void askname_done(Widget, XtPointer, XtPointer);
 static void done_button(Widget, XtPointer, XtPointer);
@@ -573,11 +573,25 @@ get_window_frame_extents(Widget w,
     unsigned char *data = 0;
     long *extents;
 
-    *top = *bottom = *left = *right = 0L;
-
     prop = XInternAtom(dpy, "_NET_FRAME_EXTENTS", True);
-    if (prop == None)
+    if (prop == None) {
+        /*
+         * FIXME!
+         */
+#ifdef MACOSX
+        /*
+         * Default window manager doesn't support _NET_FRAME_EXTENTS.
+         * Without this position tweak, the persistent inventory window
+         * creeps downward by approximately the height of its title bar
+         * and also a smaller amount to the left every time it gets
+         * updated.  Caveat:  amount determined by trial and error and
+         * could change depending upon monitor resolution....
+         */
+        *top = 22;
+        *left = 0;
+#endif
         return;
+    }
 
     while (XGetWindowProperty(dpy, win, prop,
                               0, 4, False, AnyPropertyType,
@@ -1228,10 +1242,22 @@ X11_destroy_nhwindow(winid window)
 void
 X11_update_inventory(void)
 {
-    if (x_inited && window_list[WIN_INVEN].menu_information->is_up) {
-        updated_inventory = 1; /* hack to avoid mapping&raising window */
-        (void) display_inventory((char *) 0, FALSE);
-        updated_inventory = 0;
+    struct xwindow *wp = 0;
+
+    if (!x_inited)
+        return;
+
+    if (iflags.perm_invent) {
+        /* skip any calls to update_inventory() before in_moveloop starts */
+        if (g.program_state.in_moveloop || g.program_state.gameover) {
+            updated_inventory = 1; /* hack to avoid mapping&raising window */
+            (void) display_inventory((char *) 0, FALSE);
+            updated_inventory = 0;
+        }
+    } else if ((wp = &window_list[WIN_INVEN]) != 0
+               && wp->type == NHW_MENU && wp->menu_information->is_up) {
+        /* persistent inventory is up but perm_invent is off, take it down */
+        x11_no_perminv(wp);
     }
 }
 
@@ -2097,9 +2123,10 @@ release_yn_widgets(void)
 /* X11-specific edition of yn_function(), the routine called by the core
    to show a prompt and get a single keystroke answer, often 'y' vs 'n' */
 char
-X11_yn_function(const char *ques,
-                const char *choices, /* string of possible response chars; any char if Null */
-                char def)            /* default response if user hits <space> or <return> */
+X11_yn_function(
+    const char *ques,     /* prompt text */
+    const char *choices,  /* allowed response chars; any char if Null */
+    char def)             /* default if user hits <space> or <return> */
 {
     char buf[BUFSZ];
     Arg args[4];
@@ -2135,11 +2162,15 @@ X11_yn_function(const char *ques,
         if ((cb = index(choicebuf, '\033')) != 0)
             *cb = '\0';
         /* ques [choices] (def) */
-        if ((int) (1 + strlen(ques) + 2 + strlen(choicebuf) + 4) >= BUFSZ)
-            panic("X11_yn_function:  question too long");
-        (void) strncpy(buf, ques, QBUFSZ - 1);
-        buf[QBUFSZ - 1] = '\0';
-        Sprintf(eos(buf), " [%s]", choicebuf);
+        int ln = ((int) strlen(ques)        /* prompt text */
+                  + 3                       /* " []" */
+                  + (int) strlen(choicebuf) /* choices within "[]" */
+                  + 4                       /* " (c)" */
+                  + 1                       /* a trailing space */
+                  + 1);                     /* \0 terminator */
+        if (ln >= BUFSZ)
+            panic("X11_yn_function:  question too long (%d)", ln);
+        Snprintf(buf, sizeof buf, "%.*s [%s]", QBUFSZ - 1, ques, choicebuf);
         if (def)
             Sprintf(eos(buf), " (%c)", def);
         Strcat(buf, " ");
@@ -2149,10 +2180,22 @@ X11_yn_function(const char *ques,
                       : index(choices, 'n') ? 'n'
                         : def);
     } else {
-        if ((int) (1 + strlen(ques) + 1) >= BUFSZ)
-            panic("X11_yn_function:  question too long");
+        int ln = ((int) strlen(ques)        /* prompt text */
+                  + 1                       /* a trailing space */
+                  + 1);                     /* \0 terminator */
+        if (ln >= BUFSZ)
+            panic("X11_yn_function:  question too long (%d)", ln);
         Strcpy(buf, ques);
         Strcat(buf, " ");
+    }
+    /* for popup-style, add some extra elbow room to the prompt to
+       enhance its visibility; there's no cursor shown, just the text */
+    if (!appResources.slow) {
+        char buf2[BUFSZ];
+
+        /* insert one leading space and two extra trailing spaces */
+        Strcpy(buf2, buf);
+        Snprintf(buf, sizeof buf, " %s  ", buf2);
     }
 
     /*
@@ -2219,19 +2262,19 @@ X11_yn_function(const char *ques,
     yn_getting_num = FALSE;
     (void) x_event(EXIT_ON_EXIT); /* get keystroke(s) */
 
+    /* erase and then remove the prompt */
+    num_args = 0;
+    XtSetArg(args[num_args], XtNlabel, " "); num_args++;
+    XtSetValues(yn_label, args, num_args);
     if (appResources.slow) {
-        /* keystrokes now belong to the map */
-        input_func = 0;
-        /* erase the prompt */
-        num_args = 0;
-        XtSetArg(args[num_args], XtNlabel, " "); num_args++;
-        XtSetValues(yn_label, args, num_args);
+        input_func = 0; /* keystrokes now belong to the map */
         highlight_yn(FALSE); /* disguise yn_label as part of map */
     } else {
         nh_XtPopdown(yn_popup); /* this removes the event grab */
     }
 
-    pline("%s%c", buf, (yn_return != '\033') ? yn_return : '\0');
+    char *p = trimspaces(buf); /* remove !slow's extra whitespace */
+    pline("%s %s", p, (yn_return == '\033') ? "ESC" : visctrl(yn_return));
 
     return yn_return;
 }

@@ -1,4 +1,4 @@
-NHDT-Branch: NetHack-3.7 $:$NHDT-Revision: 1.448 $ $NHDT-Date: 1612912018 2021/02/09 23:06:58 $
+NHDT-Branch: NetHack-3.7 $:$NHDT-Revision: 1.454 $ $NHDT-Date: 1613444931 2021/02/16 03:08:51 $
 
 General Fixes and Modified Features
 -----------------------------------
@@ -382,6 +382,7 @@ prevent wish request "death wand" from matching Death monster and producing a
 grammar bit: "you hear a [AEF] note squeak in the distance" (should be "an")
 curses interface failed to honor menu_xxx option settings for menu interaction
 during engraving, spaces were counted instead of non-spaces
+when an explosion scatters objects, make any that fly over sinks stop there
 
 
 Fixes to 3.7.0-x Problems that Were Exposed Via git Repository
@@ -530,6 +531,12 @@ X11: was still initializing map to 'stone' instead of 'unexplored' after they
 	became separate glyphs
 X11: for text map without color, add support for black&white ice; draw it in
 	inverse video to distinguish from ordinary floor
+X11: if perm_invent is set in NETHACKOPTIONS or config file, start with the
+	persistent inventory window displayed
+X11: use visctrl(response) when X11_yn_function() echoes prompt+response in
+	message window
+X11+OSX: after the "bad Atom" fix (below), the persistent inventory window
+	crept downward every time it got updated
 
 
 Platform- and/or Interface-Specific Fixes
@@ -661,6 +668,11 @@ X11: extend fancy status one-turn inverse video status-change highlighting to
 X11: stop including unused column 0 in the map
 X11: avoid 'bad Atom X Error' when perm_invent is enabled (seemingly window
 	manager dependent)
+X11: toggling 'perm_invent' off via 'O' didn't dismiss persistent inventory
+	window
+X11: (possibly X11+OSX): if persistent inventory was displayed at time of
+	end-of-game prompting, prompting would stall until that window was
+	manually dismissed
 
 
 General New Features
@@ -858,6 +870,7 @@ add cross-compile to WASM (github #385, #403, #412)
 differentiating gendered monster tiles from NullCGT (#430)
 check bones data directly for deja vu messages (#374)
 unify code for extracting an object from a monster's inventory (#455)
+make engraving an occupation (#460)
 
 
 Code Cleanup and Reorganization
