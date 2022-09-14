@@ -776,6 +776,10 @@ extern int tin_variety_txt(char *, int *);
 extern void tin_details(struct obj *, int, char *);
 extern boolean Popeye(int);
 
+/* ### enchant.c ### */
+
+extern void doenchant(void);
+
 /* ### end.c ### */
 
 extern void done1(int);

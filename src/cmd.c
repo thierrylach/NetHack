@@ -2529,6 +2529,8 @@ struct ext_func_tab extcmdlist[] = {
               doddrop, 0, NULL },
     { 'e',    "eat", "eat something",
               doeat, CMD_M_PREFIX, NULL },
+    { '\0',   "enchant", "enchant an item",
+              doenchant, 0, NULL },
     { 'E',    "engrave", "engrave writing on the floor",
               doengrave, 0, NULL },
     { M('e'), "enhance", "advance or check weapon and spell skills",
