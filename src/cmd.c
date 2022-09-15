@@ -41,6 +41,7 @@ extern int dokick(void);             /**/
 extern int dofire(void);             /**/
 extern int dothrow(void);            /**/
 extern int doeat(void);              /**/
+extern int doenchant(void);          /**/
 extern int done2(void);              /**/
 extern int vanquished(void);         /**/
 extern int doengrave(void);          /**/

@@ -99,7 +99,8 @@ enum achivements {
     ACH_RNK1 = 23, ACH_RNK2 = 24, ACH_RNK3 = 25, ACH_RNK4 = 26,
     ACH_RNK5 = 27, ACH_RNK6 = 28, ACH_RNK7 = 29, ACH_RNK8 = 30,
     ACH_TUNE = 31, /* discovered the castle drawbridge's open/close tune */
-    N_ACH = 32     /* allocate room for 31 plus a slot for 0 terminator */
+    ACH_CRFT = 32, /* crafted something */
+    N_ACH = 33     /* allocate room for 31 plus a slot for 0 terminator */
 };
     /*
      * Other potential achievements to track (this comment briefly resided

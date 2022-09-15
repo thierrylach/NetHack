@@ -6,9 +6,9 @@
 
 #include "hack.h"
 
-static boolean u_can_enchant(void);
-static int enchant(void);
-static int enchant_ok(struct obj*);
+boolean u_can_enchant(void);
+int doenchant(void);
+int enchant_ok(struct obj*);
 
 #define NECOMP 6
 
@@ -18,10 +18,10 @@ static int enchant_ok(struct obj*);
         c1, c2, c3, c4, c5, c6          \
     }
 
-#define NCH(v1, v2, v3, v4) {v1,(v2),v3,v4}
+#define NCH(v1, v2, v3, v4) {v1,v2,v3,v4}
 #define NO_NCH    {0,0,0}                               /* no component */
-#define NCHITEM(v1, v2)    ( v1, v2, 0 }                /* item component */
-#define NCHCORPSE(v1)  { CORPSE, BUC_ALLBKNOWN, v1 }      /* corpse component */
+#define NCHITEM(v1, v2)    {v1,v2,0}                    /* item component */
+#define NCHCORPSE(v1)  {CORPSE,BUC_ALLBKNOWN,v1}        /* corpse component */
 
 /* Enchantment component */
 struct enchcomp {
@@ -49,12 +49,12 @@ static struct enchinfo enchantable[] = {
                     NCH(TIN_WHISTLE, MAGIC_WHISTLE, 12,
                         NCHCMPT(NCHITEM(TIN_WHISTLE, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RUST_MONSTER), NO_NCH, NO_NCH, NO_NCH)),
                     NCH(BRASS_LANTERN, MAGIC_LAMP, 10,
-                        NCHCMPT(NCHITEM(BRASS_LANTERN, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RED_MOLD, BUC_UNCURSED | BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(OIL_LAMP, MAGIC_LAMP, 12,
-                        NCHCMPT(NCHITEM(OIL_LAMP, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RED_MOLD, BUC_UNCURSED | BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH)),
+                        NCHCMPT(NCHITEM(BRASS_LANTERN, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RED_MOLD), NO_NCH, NO_NCH, NO_NCH)),
+                    NCH(OIL_LAMP, MAGIC_LAMP, 14,
+                        NCHCMPT(NCHITEM(OIL_LAMP, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RED_MOLD), NO_NCH, NO_NCH, NO_NCH)),
                     NCH(WOODEN_FLUTE, MAGIC_FLUTE, 12,
                         NCHCMPT(NCHITEM(WOODEN_FLUTE, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_SHRIEKER), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(WOODEN_HARP, MAGIC_HARP, 14,
+                    NCH(WOODEN_HARP, MAGIC_HARP, 15,
                         NCHCMPT(NCHITEM(WOODEN_HARP, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH, NO_NCH)),
                     NCH(LEATHER_DRUM, DRUM_OF_EARTHQUAKE, 18,
                         NCHCMPT(NCHITEM(LEATHER_DRUM, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH, NO_NCH)),
@@ -63,15 +63,19 @@ static struct enchinfo enchantable[] = {
 };
 
 /* can hero enchant at all */
-static boolean
+boolean
 u_can_enchant(void)
 {
     if (u.uswallow) {
         pline("You cannot move enough to enchant!");
         return FALSE;
     }
+    if (Blind) {
+        You_cant("see!");
+        return FALSE;
+    }
     if (nohands(g.youmonst.data)) {
-        You_cant("even hold anything!");
+        You_cant("hold anything!");
         return FALSE;
     }
 
@@ -95,7 +99,7 @@ u_can_enchant(void)
 }
 
 /* getobj callback for object to enchant */
-static int
+int
 enchant_ok(struct obj* obj)
 {
     switch (obj->otyp) {
@@ -115,13 +119,14 @@ enchant_ok(struct obj* obj)
 }
 
 /* occupation callback for enchanting an item */
-static int
-enchant(void)
+int
+doenchant(void)
 {
     register struct obj* otmp;
     /* Look to see if you have something that can be enchanted */
     otmp = getobj("enchant", enchant_ok, GETOBJ_NOFLAGS);
 
+    // TODO: Check for possible failure if greasy hands
 
     /* Look to see if you have all of the required components */
     // TODO: Ensure you have all of the required components
@@ -129,6 +134,8 @@ enchant(void)
     /* Enchant the item and remove the components */
     // TODO: Enchant the item
     // TODO: Remove the components
+    // TODO: Record the achievement
+    //         record_achievement(ACH_CRFT);
     return 0;
 }
 

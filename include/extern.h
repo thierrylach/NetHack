@@ -778,7 +778,7 @@ extern boolean Popeye(int);
 
 /* ### enchant.c ### */
 
-extern void doenchant(void);
+extern int doenchant(void);
 
 /* ### end.c ### */
 
