@@ -102,6 +102,9 @@ u_can_enchant(void)
 int
 enchant_ok(struct obj* obj)
 {
+    if (!obj) {
+        return GETOBJ_EXCLUDE;
+    }
     switch (obj->otyp) {
     case OILSKIN_SACK: // BAG_OF_HOLDING
     case SACK: // BAG_OF_HOLDING
@@ -131,8 +134,15 @@ doenchant(void)
     /* Look to see if you have all of the required components */
     // TODO: Ensure you have all of the required components
 
+    // TODO: Select the components in case of multiple
+    //otmp = getobj("components", components_ok, GETOBJ_NOFLAGS);
+
     /* Enchant the item and remove the components */
     // TODO: Enchant the item
+    // TODO: Plus if enchantment spells are enhanced
+    // TODO: Plus/minus based on luck
+    // TODO: Plus for each blessed component (no minus - cannot use cursed)
+    // 
     // TODO: Remove the components
     // TODO: Record the achievement
     //         record_achievement(ACH_CRFT);
