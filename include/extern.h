@@ -1607,6 +1607,7 @@ extern boolean angry_guards(boolean);
 extern void pacify_guards(void);
 extern void decide_to_shapeshift(struct monst *, int);
 extern boolean vamp_stone(struct monst *);
+extern void check_gear_next_turn(struct monst *);
 
 /* ### mondata.c ### */
 
@@ -2616,6 +2617,7 @@ extern boolean get_coord(lua_State *, int, lua_Integer *, lua_Integer *);
 extern void cvt_to_abscoord(coordxy *, coordxy *);
 extern void cvt_to_relcoord(coordxy *, coordxy *);
 extern int nhl_abs_coord(lua_State *);
+extern struct selectionvar *selection_from_mkroom(struct mkroom *);
 extern void update_croom(void);
 extern const char *get_trapname_bytype(int);
 extern void l_register_des(lua_State *);
