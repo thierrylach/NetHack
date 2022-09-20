@@ -9,7 +9,6 @@
 boolean u_can_enchant(void);
 int doenchant(void);
 int enchant_ok(struct obj*);
-void tipcontainer(struct obj*);
 
 #define NECOMP 6
 
@@ -85,12 +84,24 @@ static struct enchinfo enchantable[] = {
 boolean
 u_can_enchant(void)
 {
-    if (u.uswallow) {
-        You_cant("move enough!");
+    aligntyp altaralign = a_align(u.ux, u.uy);
+    schar intell = ACURR(A_INT);
+    schar dext = ACURR(A_DEX);
+
+    if (Unaware) {
+        You("are dreaming!");
         return FALSE;
     }
     if (Blind) {
         You_cant("see!");
+        return FALSE;
+    }
+    if (Hallucination) {
+        You_cant("see what components to use!");
+        return FALSE;
+    }
+    if (u.uswallow) {
+        You_cant("move enough!");
         return FALSE;
     }
     if (nohands(g.youmonst.data)) {
@@ -98,13 +109,11 @@ u_can_enchant(void)
         return FALSE;
     }
 
-    int intell = ACURR(A_INT);
     if (intell < 20) {
         You("are not smart enough!");
         return FALSE;
     }
-    int dext = ACURR(A_DEX);
-    if (intell < 15) {
+    if (dext < 15) {
         You("are not agile enough!");
         return FALSE;
     }
@@ -116,11 +125,19 @@ u_can_enchant(void)
         You("are too encumbered.");
         return FALSE;
     }
-
-    // TODO: Are you on a co-aligned altar?
-
-    // TODO: Is your god pleased with you?
-
+    if (u.uhunger <= 10) {
+        You("are too hungry to enchant!");
+        return FALSE;
+    }
+    /* Must be on a co-aligned alter */
+    if (!IS_ALTAR(levl[u.ux][u.uy].typ)) {
+        You("are not standing on an altar.");
+        return FALSE;
+    }
+    if (u.ualign.type != altaralign) {
+        You_cant("enchant here!");
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -252,6 +269,11 @@ doenchant(void)
         /* if we exit prematurely after this point, we need to call set_unused to ensure that we don't unintentionally use up items*/
         //set_unused();
 
+
+        // TODO: Is your god pleased with you? If not, enchant fails and god becomes angrier.
+
+
+
         /* Additional adjustments to success */
         int success = rnd(100);
         success += u.ulevel;                            /* add level */
@@ -267,14 +289,14 @@ doenchant(void)
         /* additional adjustments */
         switch (otmp->otyp) {
         case BAG_OF_HOLDING:
-            /* Cannot create a bag with items inside */
+        case ICE_BOX:
+            /* Cannot create a bag or icebox with items inside */
  
-            tipcontainer(otmp);
+            //tipcontainer(otmp);
             //otmp->cobj;
             //delobj();
             break;
         case HORN_OF_PLENTY:
-        case ICE_BOX:
         case MAGIC_FLUTE:
         case MAGIC_WHISTLE:
         case MAGIC_HARP:

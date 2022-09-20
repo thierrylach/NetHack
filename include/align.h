@@ -59,4 +59,6 @@ typedef struct align { /* alignment & record */
 #define Msa2amask(x) (((x) == 3) ? 4 : (x))
 #define MSA_NONE    0  /* unaligned or multiple alignments */
 
+#define a_align(x, y) ((aligntyp) Amask2align(levl[x][y].altarmask & AM_MASK))
+
 #endif /* ALIGN_H */
