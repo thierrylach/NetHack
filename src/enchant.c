@@ -9,6 +9,8 @@
 boolean u_can_enchant(void);
 int doenchant(void);
 int enchant_ok(struct obj*);
+void tipcontainer(struct obj*);
+
 
 #define NECOMP 6
 
@@ -18,47 +20,50 @@ int enchant_ok(struct obj*);
         c1, c2, c3, c4, c5, c6          \
     }
 
-#define NCH(v1, v2, v3, v4) {v1,v2,v3,v4}
+#define NCH(v1, v2, v3, v4, v5) {v1,v2,v3,v4,v5}
 #define NO_NCH    {0,0,0}                               /* no component */
 #define NCHITEM(v1, v2)    {v1,v2,0}                    /* item component */
 #define NCHCORPSE(v1)  {CORPSE,BUC_ALLBKNOWN,v1}        /* corpse component */
 
 /* Enchantment component */
 struct enchcomp {
-    short obj;                              /* object to use */
+    short otyp;                             /* type of object to use */
     int flags;                              /* blessed/cursed flags */
     short corpse;                           /* type of corpse */
 };
 
 /* enchantment information (from, to, min level, components) */
 struct enchinfo {
-    short obj;                              /* object to enchant */
+    short otyp;                             /* type of object to enchant */
     short result;                           /* object to */
     short minlvl;                           /* minimum experience level to enchant */
+    int success;                            /* success percentage */
     struct enchcomp complist[NECOMP];       /* required components - include the base object */
 };
 static struct enchinfo enchantable[] = {
-                    NCH(OILSKIN_SACK, BAG_OF_HOLDING, 10,
+                    NCH(OILSKIN_SACK, BAG_OF_HOLDING, 10, 30,
                         NCHCMPT(NCHITEM(OILSKIN_SACK, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(SACK, BAG_OF_HOLDING, 12,
+                    NCH(SACK, BAG_OF_HOLDING, 12, 20,
                         NCHCMPT(NCHITEM(SACK, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(LARGE_BOX, ICE_BOX, 16,
+                    NCH(LARGE_BOX, ICE_BOX, 16, 20,
                         NCHCMPT(NCHITEM(SACK, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHITEM(GLOB_OF_BROWN_PUDDING, BUC_UNCURSED | BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(CHEST, ICE_BOX, 13,
+                    NCH(CHEST, ICE_BOX, 13, 30,
                         NCHCMPT(NCHITEM(SACK, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHITEM(GLOB_OF_BROWN_PUDDING, BUC_UNCURSED | BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(TIN_WHISTLE, MAGIC_WHISTLE, 12,
+                    NCH(TIN_WHISTLE, MAGIC_WHISTLE, 12, 20,
                         NCHCMPT(NCHITEM(TIN_WHISTLE, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RUST_MONSTER), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(BRASS_LANTERN, MAGIC_LAMP, 10,
+                    NCH(BRASS_LANTERN, MAGIC_LAMP, 10, 20,
                         NCHCMPT(NCHITEM(BRASS_LANTERN, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RED_MOLD), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(OIL_LAMP, MAGIC_LAMP, 14,
+                    NCH(OIL_LAMP, MAGIC_LAMP, 14, 40,
                         NCHCMPT(NCHITEM(OIL_LAMP, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_RED_MOLD), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(WOODEN_FLUTE, MAGIC_FLUTE, 12,
-                        NCHCMPT(NCHITEM(WOODEN_FLUTE, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_SHRIEKER), NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(WOODEN_HARP, MAGIC_HARP, 15,
+                    NCH(WOODEN_FLUTE, MAGIC_FLUTE, 12, 20,
+                        NCHCMPT(NCHITEM(WOODEN_FLUTE, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHCORPSE(PM_OCHRE_JELLY), NO_NCH, NO_NCH, NO_NCH)),
+                    NCH(BUGLE, HORN_OF_PLENTY, 16, 20,
+                        NCHCMPT(NCHITEM(BUGLE, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NCHITEM(RIN_SLOW_DIGESTION, BUC_BLESSED), NCHCORPSE(PM_GELATINOUS_CUBE), NO_NCH, NO_NCH)),
+                    NCH(WOODEN_HARP, MAGIC_HARP, 15, 20,
                         NCHCMPT(NCHITEM(WOODEN_HARP, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(LEATHER_DRUM, DRUM_OF_EARTHQUAKE, 18,
+                    NCH(LEATHER_DRUM, DRUM_OF_EARTHQUAKE, 18, 10,
                         NCHCMPT(NCHITEM(LEATHER_DRUM, BUC_UNCURSED | BUC_BLESSED), NCHITEM(POT_WATER, BUC_BLESSED), NO_NCH, NO_NCH, NO_NCH, NO_NCH)),
-                    NCH(0, 0, 0,
+                    NCH(0, 0, 0, 0,
                         NCHCMPT(NO_NCH, NO_NCH, NO_NCH, NO_NCH, NO_NCH, NO_NCH))
 };
 
@@ -67,7 +72,7 @@ boolean
 u_can_enchant(void)
 {
     if (u.uswallow) {
-        pline("You cannot move enough to enchant!");
+        You_cant("move enough!");
         return FALSE;
     }
     if (Blind) {
@@ -80,16 +85,23 @@ u_can_enchant(void)
     }
 
     int intell = ACURR(A_INT);
-    if (intell < 17) {
+    if (intell < 20) {
         You("are not smart enough!");
+        return FALSE;
+    }
+    int dext = ACURR(A_DEX);
+    if (intell < 15) {
+        You("are not agile enough!");
         return FALSE;
     }
     if (u.ulevel < 10) {
         You("are not experienced enough!");
         return FALSE;
     }
-    if (check_capacity((char *) 0))
+    if (calc_capacity(0) > 2) {
+        You("are too encumbered.");
         return FALSE;
+    }
 
     // TODO: Are you on a co-aligned altar?
 
@@ -105,47 +117,174 @@ enchant_ok(struct obj* obj)
     if (!obj) {
         return GETOBJ_EXCLUDE;
     }
-    switch (obj->otyp) {
-    case OILSKIN_SACK: // BAG_OF_HOLDING
-    case SACK: // BAG_OF_HOLDING
-    case TIN_WHISTLE: // MAGIC_WHISTLE
-    case BRASS_LANTERN: // MAGIC_LAMP
-    case OIL_LAMP: // MAGIC_LAMP
-    case WOODEN_FLUTE: // MAGIC_FLUTE:
-    case WOODEN_HARP: // MAGIC_HARP:
-    case LEATHER_DRUM: //DRUM_OF_EARTHQUAKE:
-        return GETOBJ_SUGGEST;
-    default:
-        return GETOBJ_EXCLUDE_SELECTABLE;
+    register int i;
+    for (i = 0; enchantable[i].otyp != 0; i++) {
+        if (enchantable[i].otyp == obj->otyp)
+            return GETOBJ_SUGGEST;
     }
     return GETOBJ_EXCLUDE_SELECTABLE;
 }
 
-/* occupation callback for enchanting an item */
+void
+set_unused(void)
+{
+    struct obj* otmp;
+    for (otmp = g.invent; otmp; otmp = otmp->nobj) {
+        otmp->in_use = FALSE;
+    }
+}
+
+int
+is_usable_for_enchant(struct enchcomp* component, struct obj* obj) {
+    debugpline2("Comparing %s to %s", "", "");
+    if (component->otyp == CORPSE && obj->corpsenm != component->corpse) {
+        return FALSE;
+    }
+    if (obj->blessed && (component->flags && BUC_BLESSED)) {
+        return TRUE;
+    }
+    if (obj->cursed && (component->flags && BUC_CURSED)) {
+        return TRUE;
+    }
+    if ((!(obj->blessed)) && (!(obj->cursed)) && (component->flags && BUC_UNCURSED)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+//struct posscomp {                   /* possible component */
+//    struct posscomp* next;          /* pointer to next in chain*/
+//    boolean selected;               /* is component selected for use? */
+//    boolean ignored;                 /* ignored because another of that component has been selected*/
+//    struct obj* comp;               /* pointer to object in inventory */
+//};
+
+/* callback for enchanting an item */
 int
 doenchant(void)
 {
     register struct obj* otmp;
+    struct enchinfo *trying = NULL;     /* requirements for enchanting obj */
+    struct obj* isearch = NULL;
+    char posscomp[26];                  /* inventory letters of possible components */
+    boolean found1;
+
+    register int i;
+    for (i = 0; i < 26; i++)
+        posscomp[i] = '\0';
+
     /* Look to see if you have something that can be enchanted */
     otmp = getobj("enchant", enchant_ok, GETOBJ_NOFLAGS);
+    if (!otmp) {
+        return 0;
+    }
 
-    // TODO: Check for possible failure if greasy hands
+    for (i = 0; enchantable[i].otyp != 0; i++) {
+        if (enchantable[i].otyp == otmp->otyp)
+            trying = &enchantable[i];
+    }
+     if (!trying) {
+        impossible("Did not find object type to enchant");
+    }
 
-    /* Look to see if you have all of the required components */
-    // TODO: Ensure you have all of the required components
+    if (!u_can_enchant()) {
+        return 0;
+    }
+    /* This means that you can retry, but the message is annoying */
+    if (Glib && rnd(10) < 3) {
+        Your("hands are too slippery");
+        return 0;
+    }
 
-    // TODO: Select the components in case of multiple
-    //otmp = getobj("components", components_ok, GETOBJ_NOFLAGS);
+    if (trying) {
+        /* Check to see if you are of sufficient level for this specific item */
+        if (u.ulevel < trying->minlvl) {
+            You("are not experienced enough!");
+            return FALSE;
+        }
 
-    /* Enchant the item and remove the components */
-    // TODO: Enchant the item
-    // TODO: Plus if enchantment spells are enhanced
-    // TODO: Plus/minus based on luck
-    // TODO: Plus for each blessed component (no minus - cannot use cursed)
-    // 
-    // TODO: Remove the components
-    // TODO: Record the achievement
-    //         record_achievement(ACH_CRFT);
+        /* Look to see if you have all of the required components */
+        // TODO: Ensure you have all of the required components
+        struct enchcomp* component = NULL;
+        for (i = 0; i < 6; i++) {
+            component = &(trying->complist[i]);
+            if (!(component->otyp)) {
+                continue;
+            }
+            found1 = FALSE;
+            for (isearch = g.invent; isearch; isearch = isearch->nobj) {
+                if (isearch->otyp == component->otyp) {
+                    if (!is_usable_for_enchant(component, isearch))
+                        continue;
+                    //isearch->in_use = TRUE;
+                    // TODO: Add to the possible component list
+                    ///* Add to the possible component list*/
+                    //tcomp = &{possible, false, false, isearch};
+                    //possible = tcomp;
+                    found1 = TRUE;
+                }
+            }
+            if (!found1) {
+                You("do not have all of the necessary components needed to enchant.");
+                return 0;
+            }
+        }
+        // display_cinventory ?
+
+
+        // TODO: Select the specific components in case of multiple
+        //otmp = getobj("components", components_ok, GETOBJ_NOFLAGS);
+
+        /* if we exit prematurely after this point, we need to call set_unused to ensure that we don't unintentionally use up items*/
+        //set_unused();
+
+        /* Additional adjustments to success */
+        int success = rnd(100);
+        success += u.ulevel;                            /* add level */
+        success += P_SKILL(P_ENCHANTMENT_SPELL);        /* Add enhancement */
+        success += Luck;
+
+        // TODO: Plus for each blessed component, minus for each cursed
+        // 
+
+        /* Enchant the item and remove the components */
+        otmp = mksobj(trying->result, TRUE, FALSE);
+        otmp->cursed = FALSE;                           /* will never be cursed */
+        /* additional adjustments */
+        switch (otmp->otyp) {
+        case BAG_OF_HOLDING:
+            /* Cannot create a bag with items inside */
+ 
+            tipcontainer(otmp);
+            //otmp->cobj;
+            //delobj();
+            break;
+        case HORN_OF_PLENTY:
+        case ICE_BOX:
+        case MAGIC_FLUTE:
+        case MAGIC_WHISTLE:
+        case MAGIC_HARP:
+        case MAGIC_LAMP:
+        case DRUM_OF_EARTHQUAKE:
+            break;
+        default:
+            impossible("Unhandled enchanted item");
+        }
+        otmp = addinv(otmp);
+        pline("You have successfully enchanted an item.");
+
+        /* Remove the components */
+        for (isearch = g.invent; isearch; isearch = isearch->nobj) {
+            if (isearch->in_use) {
+                useup(isearch);
+                isearch = g.invent;     /* restart the search because the inventory chain may have changed */
+            }
+        }
+        record_achievement(ACH_CRFT);
+
+    }
+
+
     return 0;
 }
 
