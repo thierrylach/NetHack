@@ -2217,6 +2217,8 @@ extern const char *align_gname(aligntyp);
 extern const char *halu_gname(aligntyp);
 extern const char *align_gtitle(aligntyp);
 extern void altar_wrath(coordxy, coordxy);
+extern void godvoice(aligntyp, const char*);
+
 
 /* ### priest.c ### */
 

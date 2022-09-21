@@ -14,7 +14,6 @@ static void at_your_feet(const char *);
 static void gcrownu(void);
 static void give_spell(void);
 static void pleased(aligntyp);
-static void godvoice(aligntyp, const char *);
 static void god_zaps_you(aligntyp);
 static void fry_by_god(aligntyp, boolean);
 static void gods_angry(aligntyp);
@@ -1366,7 +1365,7 @@ water_prayer(boolean bless_water)
     return (boolean) (changed > 0L);
 }
 
-static void
+void
 godvoice(aligntyp g_align, const char *words)
 {
     const char *quot = "";
