@@ -402,7 +402,9 @@ restmonchn(NHFILE* nhfp)
         offset = mtmp->mnum;
         mtmp->data = &mons[offset];
         if (ghostly) {
-            int mndx = monsndx(mtmp->data);
+            int mndx = (mtmp->cham == NON_PM) ? monsndx(mtmp->data)
+                                              : mtmp->cham;
+
             if (propagate(mndx, TRUE, ghostly) == 0) {
                 /* cookie to trigger purge in getbones() */
                 mtmp->mhpmax = DEFUNCT_MONSTER;
@@ -1093,6 +1095,11 @@ getlev(NHFILE* nhfp, int pid, xint8 lev)
         if (nhfp->structlevel)
             mread(nhfp->fd, (genericptr_t)trap, sizeof(struct trap));
         if (trap->tx != 0) {
+            if (g.program_state.restoring != REST_GSTATE
+                && trap->dst.dnum == u.uz.dnum) {
+                /* convert relative destination to absolute */
+                trap->dst.dlevel += u.uz.dlevel;
+            }
             trap->ntrap = g.ftrap;
             g.ftrap = trap;
         } else

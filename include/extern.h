@@ -10,7 +10,7 @@
 #if 0
 extern long *alloc(unsigned int);
 #endif
-extern char *fmt_ptr(const void *);
+extern char *fmt_ptr(const void *) NONNULL;
 
 /* This next pre-processor directive covers almost the entire file,
  * interrupted only occasionally to pick up specific functions as needed. */
@@ -2802,6 +2802,7 @@ extern boolean burnarmor(struct monst *);
 extern int erode_obj(struct obj *, const char *, int, int);
 extern boolean grease_protect(struct obj *, const char *, struct monst *);
 extern struct trap *maketrap(coordxy, coordxy, int);
+extern d_level *clamp_hole_destination(d_level *);
 extern void fall_through(boolean, unsigned);
 extern struct monst *animate_statue(struct obj *, coordxy, coordxy, int, int *);
 extern struct monst *activate_statue_trap(struct trap *, coordxy, coordxy,

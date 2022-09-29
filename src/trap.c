@@ -1,4 +1,4 @@
-/* NetHack 3.7	trap.c	$NHDT-Date: 1661633977 2022/08/27 20:59:37 $  $NHDT-Branch: NetHack-3.7 $:$NHDT-Revision: 1.502 $ */
+/* NetHack 3.7	trap.c	$NHDT-Date: 1663890450 2022/09/22 23:47:30 $  $NHDT-Branch: NetHack-3.7 $:$NHDT-Revision: 1.508 $ */
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /*-Copyright (c) Robert Patrick Rankin, 2013. */
 /* NetHack may be freely redistributed.  See license for details. */
@@ -8,7 +8,7 @@
 extern const char *const destroy_strings[][3]; /* from zap.c */
 
 static void mk_trap_statue(coordxy, coordxy);
-static int dng_bottom(void);
+static int dng_bottom(d_level *lev);
 static void hole_destination(d_level *);
 static boolean keep_saddle_with_steedcorpse(unsigned, struct obj *,
                                             struct obj *);
@@ -375,20 +375,26 @@ mk_trap_statue(coordxy x, coordxy y)
     mongone(mtmp);
 }
 
-/* find "bottom" level of current dungeon, stopping at quest locate */
+/* find "bottom" level of specified dungeon, stopping at quest locate */
 static int
-dng_bottom(void)
+dng_bottom(d_level *lev)
 {
-    int bottom = dunlevs_in_dungeon(&u.uz);
+    int bottom = dunlevs_in_dungeon(lev);
 
     /* when in the upper half of the quest, don't fall past the
        middle "quest locate" level if hero hasn't been there yet */
-    if (In_quest(&u.uz)) {
+    if (In_quest(lev)) {
         int qlocate_depth = qlocate_level.dlevel;
 
         /* deepest reached < qlocate implies current < qlocate */
-        if (dunlev_reached(&u.uz) < qlocate_depth)
+        if (dunlev_reached(lev) < qlocate_depth)
             bottom = qlocate_depth; /* early cut-off */
+    } else if (In_hell(lev)) {
+        /* if the invocation hasn't been performed yet, the vibrating square
+           level is effectively the bottom of Gehennom; the sanctum level is
+           out of reach until after the invocation */
+        if (!u.uevent.invoked)
+            bottom -= 1;
     }
     return bottom;
 }
@@ -397,17 +403,15 @@ dng_bottom(void)
 static void
 hole_destination(d_level *dst)
 {
-    int bottom = dng_bottom();
+    int bottom = dng_bottom(&u.uz);
 
     dst->dnum = u.uz.dnum;
     dst->dlevel = dunlev(&u.uz);
-    do {
+    while (dst->dlevel < bottom) {
         dst->dlevel++;
-        if (Is_sanctum(dst)) {
-            dst->dlevel--;
+        if (rn2(4))
             break;
-        }
-    } while (!rn2(4) && dst->dlevel < bottom);
+    }
 }
 
 struct trap *
@@ -512,6 +516,17 @@ maketrap(coordxy x, coordxy y, int typ)
     return ttmp;
 }
 
+/* limit the destination of a hole or trapdoor to the furthest level you
+   should be able to fall to */
+d_level *
+clamp_hole_destination(d_level *dlev)
+{
+    int bottom = dng_bottom(dlev);
+
+    dlev->dlevel = min(dlev->dlevel, bottom);
+    return dlev;
+}
+
 void
 fall_through(
     boolean td, /* td == TRUE : trap door or hole */
@@ -520,7 +535,7 @@ fall_through(
     d_level dtmp;
     char msgbuf[BUFSZ];
     const char *dont_fall = 0;
-    int newlevel, bottom = dng_bottom();
+    int newlevel;
     struct trap *t = (struct trap *) 0;
 
     /* we'll fall even while levitating in Sokoban; otherwise, if we
@@ -549,8 +564,7 @@ fall_through(
              || (!Can_fall_thru(&u.uz) && !levl[u.ux][u.uy].candig)
              || ((Flying || is_clinger(g.youmonst.data)
                   || (ceiling_hider(g.youmonst.data) && u.uundetected))
-                 && !(ftflags & TOOKPLUNGE))
-             || (Inhell && !u.uevent.invoked && newlevel == bottom)) {
+                 && !(ftflags & TOOKPLUNGE))) {
         dont_fall = "don't fall in.";
     } else if (g.youmonst.data->msize >= MZ_HUGE) {
         dont_fall = "don't fit through.";
@@ -580,16 +594,18 @@ fall_through(
     if (Is_stronghold(&u.uz)) {
         find_hell(&dtmp);
     } else {
-        int dist = newlevel - dunlev(&u.uz);
+        int dist;
 
         if (t) {
-            dtmp.dnum = t->dst.dnum;
-            dtmp.dlevel = t->dst.dlevel;
-            dist = dtmp.dlevel - dunlev(&u.uz);
+            assign_level(&dtmp, &t->dst);
+            /* don't fall beyond the bottom, in case this came from a bones
+               file with different dungeon size  */
+            (void) clamp_hole_destination(&dtmp);
         } else {
             dtmp.dnum = u.uz.dnum;
             dtmp.dlevel = newlevel;
         }
+        dist = depth(&dtmp) - depth(&u.uz);
         if (dist > 1)
             You("fall down a %s%sshaft!", dist > 3 ? "very " : "",
                 dist > 2 ? "deep " : "");
