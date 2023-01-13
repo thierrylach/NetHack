@@ -55,12 +55,14 @@ static boolean date_via_env = FALSE;
 
 extern unsigned long md_ignored_features(void);
 char *mdlib_version_string(char *, const char *);
-char *version_id_string(char *, int, const char *);
-char *bannerc_string(char *, int, const char *);
+char *version_id_string(char *, size_t, const char *);
+char *bannerc_string(char *, size_t, const char *);
 int case_insensitive_comp(const char *, const char *);
 
 static void make_version(void);
 static char *eos(char *);
+int mstrength(struct permonst *);
+
 #if 0
 static char *mdlib_strsubst(char *, const char *, const char *);
 #endif
@@ -105,7 +107,7 @@ struct win_information {
 static struct win_information window_opts[] = {
 #ifdef TTY_GRAPHICS
     { "tty",
-      /* testing 'USE_TILES' here would bring confusion because it could
+      /* testing 'TILES_IN_GLYPHMAP' here would bring confusion because it could
          apply to another interface such as X11, so check MSDOS explicitly
          instead; even checking TTY_TILES_ESCCODES would probably be
          confusing to most users (and it will already be listed separately
@@ -281,11 +283,7 @@ nh_snprintf(const char *func UNUSED, int line UNUSED, char *str, size_t size,
     int n;
 
     va_start(ap, fmt);
-#ifdef NO_VSNPRINTF
-    n = vsprintf(str, fmt, ap);
-#else
     n = vsnprintf(str, size, fmt, ap);
-#endif
     va_end(ap);
 
     if (n < 0 || (size_t)n >= size) { /* is there a problem? */
@@ -298,7 +296,7 @@ RESTORE_WARNING_FORMAT_NONLITERAL
 #endif  /* MAKEDEFS_C */
 
 char *
-version_id_string(char *outbuf, int bufsz, const char *build_date)
+version_id_string(char *outbuf, size_t bufsz, const char *build_date)
 {
     char subbuf[64], versbuf[64];
     char statusbuf[64];
@@ -331,7 +329,7 @@ version_id_string(char *outbuf, int bufsz, const char *build_date)
 /* still within #if MAKDEFS_C || FOR_RUNTIME */
 
 char *
-bannerc_string(char *outbuf, int bufsz, const char *build_date)
+bannerc_string(char *outbuf, size_t bufsz, const char *build_date)
 {
     char subbuf[64], versbuf[64];
 
@@ -649,11 +647,11 @@ opt_out_words(
     char *word;
 
     while (*str) {
-        word = index(str, ' ');
+        word = strchr(str, ' ');
 #if 0
         /* treat " (" as unbreakable space */
         if (word && *(word + 1) == '(')
-            word = index(word + 1,  ' ');
+            word = strchr(word + 1,  ' ');
 #endif
         if (word)
             *word = '\0';
@@ -812,10 +810,10 @@ case_insensitive_comp(const char *s1, const char *s2)
     for (;; s1++, s2++) {
         u1 = (uchar) *s1;
         if (isupper(u1))
-            u1 = tolower(u1);
+            u1 = (uchar) tolower(u1);
         u2 = (uchar) *s2;
         if (isupper(u2))
-            u2 = tolower(u2);
+            u2 = (uchar) tolower(u2);
         if (u1 == '\0' || u1 != u2)
             break;
     }

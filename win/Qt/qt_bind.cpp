@@ -11,6 +11,7 @@ extern "C" {
 #include "qt_pre.h"
 #include <QtGui/QtGui>
 #include <QtCore/QStringList>
+#if defined(USER_SOUNDS) && !defined(QT_NO_SOUND)
 #if QT_VERSION < 0x050000
 #include <QtGui/QSoundEffect>
 #elif QT_VERSION < 0x060000
@@ -21,6 +22,7 @@ extern "C" {
 #include <QtWidgets/QtWidgets>
 #include <QSoundEffect>
 #endif  /* QT_VERSION */
+#endif /* USER_SOUNDS && !QT_NO_SOUND */
 #include "qt_post.h"
 #include "qt_bind.h"
 #include "qt_click.h"
@@ -224,7 +226,7 @@ void NetHackQtBind::qt_askname()
     int ch = -1; // -1 => new game
 
     have_asked = true;
-    str_copy(default_plname, g.plname, PL_NSIZ);
+    str_copy(default_plname, gp.plname, PL_NSIZ);
 
     // We do it all here (plus qt_plsel.cpp and qt_svsel.cpp),
     // nothing in player_selection().
@@ -239,9 +241,9 @@ void NetHackQtBind::qt_askname()
         NetHackQtSavedGameSelector sgsel((const char **) saved);
         ch = sgsel.choose();
         if (ch >= 0)
-            str_copy(g.plname, saved[ch], SIZE(g.plname));
+            str_copy(gp.plname, saved[ch], SIZE(gp.plname));
         // caller needs new lock name even if plname[] hasn't changed
-        // because successful get_saved_games() clobbers g.SAVEF[]
+        // because successful get_saved_games() clobbers gs.SAVEF[]
         ::iflags.renameinprogress = TRUE;
     }
     free_saved_games(saved);
@@ -269,10 +271,10 @@ void NetHackQtBind::qt_askname()
         break;
     }
 
-    if (!*g.plname)
+    if (!*gp.plname)
         // in case Choose() returns with plname[] empty
-        Strcpy(g.plname, default_plname);
-    else if (strcmp(g.plname, default_plname) != 0)
+        Strcpy(gp.plname, default_plname);
+    else if (strcmp(gp.plname, default_plname) != 0)
         // caller needs to set new lock file name
         ::iflags.renameinprogress = TRUE;
     return;
@@ -446,7 +448,7 @@ void NetHackQtBind::qt_display_file(const char *filename, boolean must_exist)
     }
 
     if (complain) {
-	QString message = QString::asprintf("File not found: %s\n",filename);
+	QString message = nh_qsprintf("File not found: %s\n",filename);
 	QMessageBox::warning(NULL, "File Error", message, QMessageBox::Ignore);
     }
 }
@@ -485,7 +487,7 @@ void NetHackQtBind::qt_update_inventory(int arg UNUSED)
 	main->updateInventory(); // update the paper doll inventory subset
 
     /* doesn't work yet
-    if (g.program_state.something_worth_saving && iflags.perm_invent)
+    if (gp.program_state.something_worth_saving && iflags.perm_invent)
         display_inventory(NULL, false);
     */
 }
@@ -522,11 +524,11 @@ void NetHackQtBind::qt_cliparound_window(winid wid, int x, int y)
 void NetHackQtBind::qt_print_glyph(
     winid wid, coordxy x, coordxy y,
     const glyph_info *glyphinfo,
-    const glyph_info *bkglyphinfo UNUSED)
+    const glyph_info *bkglyphinfo)
 {
     /* TODO: bkglyph */
     NetHackQtWindow *window = id_to_window[(int) wid];
-    window->PrintGlyph(x, y, glyphinfo);
+    window->PrintGlyph(x, y, glyphinfo, bkglyphinfo);
 }
 
 #if 0
@@ -639,7 +641,7 @@ char NetHackQtBind::qt_more()
     // ^C comment in that routine] when the core triggers --More-- via
     //  done2() -> really_done() -> display_nhwindow(WIN_MESSAGE, TRUE)
     // (get rid of this if the exec() loop issue gets properly fixed)
-    if (::g.program_state.gameover)
+    if (::gp.program_state.gameover)
         return ch; // bypass --More-- and just continue with program exit
 
     NetHackQtMessageWindow *mesgwin = main ? main->GetMessageWindow() : NULL;
@@ -703,7 +705,7 @@ char NetHackQtBind::qt_yn_function(const char *question_,
     int result = -1;
 
     if (choices) {
-        QString choicebuf((int) strlen(choices) + 1, QChar('\0'));
+        QString choicebuf;
         for (const char *p = choices; *p; ++p) {
             if (*p == '\033') // <esc> and anything beyond is hidden
                 break;
@@ -1040,6 +1042,9 @@ struct window_procs Qt_procs = {
 #ifdef SELECTSAVED
      | WC2_SELECTSAVED
 #endif
+#ifdef ENHANCED_SYMBOLS
+     | WC2_U_UTF8STR | WC2_U_24BITCOLOR
+#endif
      | WC2_STATUSLINES),
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, /* color availability */
     nethack_qt_::NetHackQtBind::qt_init_nhwindows,
@@ -1115,7 +1120,9 @@ struct window_procs Qt_procs = {
 #ifndef WIN32
 extern "C" void play_usersound(const char *, int);
 
+#if defined(USER_SOUNDS) && !defined(QT_NO_SOUND)
 QSoundEffect *effect = NULL;
+#endif
 
 /* called from core, sounds.c */
 void

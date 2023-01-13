@@ -87,6 +87,7 @@ struct flag {
     int pile_limit;    /* controls feedback when walking over objects */
     char discosort;    /* order of dodiscovery/doclassdisco output: o,s,c,a */
     char sortloot; /* 'n'=none, 'l'=loot (pickup), 'f'=full ('l'+invent) */
+    uchar vanq_sortmode; /* [uint_8] order of vanquished monsters: 0..7 */
     char inv_order[MAXOCLASSES];
     char pickup_types[MAXOCLASSES];
 #define NUM_DISCLOSURE_OPTIONS 6 /* i,a,v,g,c,o (decl.c) */
@@ -189,13 +190,14 @@ struct debug_flags {
  */
 struct instance_flags {
     boolean debug_fuzzer;  /* fuzz testing */
-    boolean defer_plname;  /* X11 hack: askname() might not set g.plname */
+    boolean defer_plname;  /* X11 hack: askname() might not set gp.plname */
     boolean herecmd_menu;  /* use menu when mouseclick on yourself */
     boolean invis_goldsym; /* gold symbol is ' '? */
     boolean in_lua;        /* executing a lua script */
     boolean lua_testing;   /* doing lua tests */
     boolean partly_eaten_hack; /* extra flag for xname() used when it's called
                                 * indirectly so we can't use xname_flags() */
+    boolean remember_getpos; /* save getpos() positioning in do-again queue */
     boolean sad_feeling;   /* unseen pet is dying */
     int at_midnight;       /* only valid during end of game disclosure */
     int at_night;          /* also only valid during end of game disclosure */
@@ -377,10 +379,10 @@ struct instance_flags {
     boolean wc2_hitpointbar;  /* show graphical bar representing hit points */
     boolean wc2_guicolor;       /* allow colours in gui (outside map) */
     int wc_mouse_support;       /* allow mouse support */
-    int wc2_term_cols;		/* terminal width, in characters */
-    int wc2_term_rows;		/* terminal height, in characters */
+    int wc2_term_cols;          /* terminal width, in characters */
+    int wc2_term_rows;          /* terminal height, in characters */
     int wc2_statuslines;        /* default = 2, curses can handle 3 */
-    int wc2_windowborders;	/* display borders on NetHack windows */
+    int wc2_windowborders;      /* display borders on NetHack windows */
     int wc2_petattr;            /* text attributes for pet */
 #ifdef WIN32
 #define MAX_ALTKEYHANDLING 25

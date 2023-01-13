@@ -22,7 +22,7 @@ static struct breadcrumbs bcpbreadcrumbs = {0}, bcubreadcrumbs = {0};
 void
 ballrelease(boolean showmsg)
 {
-    if (carried(uball)) {
+    if (carried(uball) && !welded(uball)) {
         if (showmsg)
             pline("Startled, you drop the iron ball.");
         if (uwep == uball)
@@ -43,6 +43,9 @@ void
 ballfall(void)
 {
     boolean gets_hit;
+
+    if (uball && carried(uball) && welded(uball))
+        return;
 
     gets_hit = (((uball->ox != u.ux) || (uball->oy != u.uy))
                 && ((uwep == uball) ? FALSE : (boolean) rn2(5)));
@@ -356,7 +359,7 @@ bc_order(void)
         || u.uswallow)
         return BCPOS_DIFFER;
 
-    for (obj = g.level.objects[uball->ox][uball->oy]; obj;
+    for (obj = gl.level.objects[uball->ox][uball->oy]; obj;
          obj = obj->nexthere) {
         if (obj == uchain)
             return BCPOS_CHAIN;
@@ -771,7 +774,7 @@ drag_ball(coordxy x, coordxy y, int *bc_control,
 
     if (near_capacity() > SLT_ENCUMBER && dist2(x, y, u.ux, u.uy) <= 2) {
         You("cannot %sdrag the heavy iron ball.",
-            g.invent ? "carry all that and also " : "");
+            gi.invent ? "carry all that and also " : "");
         nomul(0);
         return FALSE;
     }
@@ -936,7 +939,7 @@ drop_ball(coordxy x, coordxy y)
             u.ux = x - u.dx;
             u.uy = y - u.dy;
         }
-        g.vision_full_recalc = 1; /* hero has moved, recalculate vision later */
+        gv.vision_full_recalc = 1; /* hero has moved, recalculate vision later */
 
         if (Blind) {
             /* drop glyph under the chain */
@@ -966,7 +969,7 @@ litter(void)
     struct obj *otmp, *nextobj = 0;
     int capacity = weight_cap();
 
-    for (otmp = g.invent; otmp; otmp = nextobj) {
+    for (otmp = gi.invent; otmp; otmp = nextobj) {
         nextobj = otmp->nobj;
         if (otmp != uball && rnd(capacity) <= (int) otmp->owt) {
             if (canletgo(otmp, "")) {
@@ -996,7 +999,7 @@ drag_down(void)
      */
     forward = carried(uball) && (uwep == uball || !uwep || !rn2(3));
 
-    if (carried(uball))
+    if (carried(uball) && !welded(uball))
         You("lose your grip on the iron ball.");
 
     cls();  /* previous level is still displayed although you

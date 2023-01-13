@@ -50,7 +50,7 @@ awaken_monsters(int distance)
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
         if (DEADMONSTER(mtmp))
             continue;
-        if ((distm = distu(mtmp->mx, mtmp->my)) < distance) {
+        if ((distm = mdistu(mtmp)) < distance) {
             mtmp->msleeping = 0;
             mtmp->mcanmove = 1;
             mtmp->mfrozen = 0;
@@ -79,7 +79,7 @@ put_monsters_to_sleep(int distance)
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
         if (DEADMONSTER(mtmp))
             continue;
-        if (distu(mtmp->mx, mtmp->my) < distance
+        if (mdistu(mtmp) < distance
             && sleep_monst(mtmp, d(10, 10), TOOL_CLASS)) {
             mtmp->msleeping = 1; /* 10d10 turns + wake_nearby to rouse */
             slept_monst(mtmp);
@@ -101,7 +101,7 @@ charm_snakes(int distance)
         if (DEADMONSTER(mtmp))
             continue;
         if (mtmp->data->mlet == S_SNAKE && mtmp->mcanmove
-            && distu(mtmp->mx, mtmp->my) < distance) {
+            && mdistu(mtmp) < distance) {
             was_peaceful = mtmp->mpeaceful;
             mtmp->mpeaceful = 1;
             mtmp->mavenge = 0;
@@ -134,7 +134,7 @@ calm_nymphs(int distance)
         if (DEADMONSTER(mtmp))
             continue;
         if (mtmp->data->mlet == S_NYMPH && mtmp->mcanmove
-            && distu(mtmp->mx, mtmp->my) < distance) {
+            && mdistu(mtmp) < distance) {
             mtmp->msleeping = 0;
             mtmp->mpeaceful = 1;
             mtmp->mavenge = 0;
@@ -155,7 +155,7 @@ awaken_soldiers(struct monst* bugler  /* monster that played instrument */)
     int distance, distm;
 
     /* distance of affected non-soldier monsters to bugler */
-    distance = ((bugler == &g.youmonst) ? u.ulevel : bugler->data->mlevel) * 30;
+    distance = ((bugler == &gy.youmonst) ? u.ulevel : bugler->data->mlevel) * 30;
 
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
         if (DEADMONSTER(mtmp))
@@ -169,8 +169,8 @@ awaken_soldiers(struct monst* bugler  /* monster that played instrument */)
             else if (!Deaf)
                 Norep("%s the rattle of battle gear being readied.",
                       "You hear");  /* Deaf-aware */
-        } else if ((distm = ((bugler == &g.youmonst)
-                                 ? distu(mtmp->mx, mtmp->my)
+        } else if ((distm = ((bugler == &gy.youmonst)
+                                 ? mdistu(mtmp)
                                  : dist2(bugler->mx, bugler->my, mtmp->mx,
                                          mtmp->my))) < distance) {
             mtmp->msleeping = 0;
@@ -204,7 +204,7 @@ charm_monsters(int distance)
         if (DEADMONSTER(mtmp))
             continue;
 
-        if (distu(mtmp->mx, mtmp->my) <= distance) {
+        if (mdistu(mtmp) <= distance) {
             /* a shopkeeper can't be tamed but tamedog() pacifies an angry
                one; do that even if mtmp resists in order to behave the same
                as a non-cursed scroll of taming or spell of charm monster */
@@ -400,7 +400,7 @@ do_earthquake(int force)
                         Your("chain breaks!");
                         reset_utrap(TRUE);
                     }
-                    if (Levitation || Flying || is_clinger(g.youmonst.data)) {
+                    if (Levitation || Flying || is_clinger(gy.youmonst.data)) {
                         if (!tu_pit) { /* no pit here previously */
                             pline("A chasm opens up under you!");
                             You("don't fall in!");
@@ -426,8 +426,8 @@ do_earthquake(int force)
                         if (keepfooting)
                             exercise(A_DEX, TRUE);
                         else
-                            selftouch((Upolyd && (slithy(g.youmonst.data)
-                                                  || nolimbs(g.youmonst.data)))
+                            selftouch((Upolyd && (slithy(gy.youmonst.data)
+                                                  || nolimbs(gy.youmonst.data)))
                                       ? "Shaken, you"
                                       : "Falling down, you");
                     }
@@ -620,7 +620,7 @@ do_improvisation(struct obj* instr)
             You("extract a loud noise from %s.", yname(instr));
         else
             You("blow into the bugle.");
-        awaken_soldiers(&g.youmonst);
+        awaken_soldiers(&gy.youmonst);
         exercise(A_WIS, FALSE);
         break;
     case MAGIC_HARP: /* Charm monsters */
@@ -672,7 +672,7 @@ do_improvisation(struct obj* instr)
                 rn2(2) ? "butcher" : rn2(2) ? "manage" : "pull off",
                 an(beats[rn2(SIZE(beats))]));
         awaken_monsters(u.ulevel * (mundane ? 5 : 40));
-        g.context.botl = TRUE;
+        gc.context.botl = TRUE;
         break;
     default:
         impossible("What a weird instrument (%d)!", instr->otyp);
@@ -698,7 +698,7 @@ do_play_instrument(struct obj* instr)
     } else if ((instr->otyp == WOODEN_FLUTE || instr->otyp == MAGIC_FLUTE
                 || instr->otyp == TOOLED_HORN || instr->otyp == FROST_HORN
                 || instr->otyp == FIRE_HORN || instr->otyp == BUGLE)
-               && !can_blow(&g.youmonst)) {
+               && !can_blow(&gy.youmonst)) {
         You("are incapable of playing %s.", thesimpleoname(instr));
         return ECMD_OK;
     }
@@ -715,7 +715,7 @@ do_play_instrument(struct obj* instr)
         if (c == 'q') {
             goto nevermind;
         } else if (c == 'y') {
-            Strcpy(buf, g.tune);
+            Strcpy(buf, gt.tune);
         } else {
             getlin("What tune are you playing? [5 notes, A-G]", buf);
             (void) mungspaces(buf);
@@ -739,7 +739,7 @@ do_play_instrument(struct obj* instr)
          */
         if (Is_stronghold(&u.uz)) {
             exercise(A_WIS, TRUE); /* just for trying */
-            if (!strcmp(buf, g.tune)) {
+            if (!strcmp(buf, gt.tune)) {
                 /* Search for the drawbridge */
                 for (y = u.uy - 1; y <= u.uy + 1; y++)
                     for (x = u.ux - 1; x <= u.ux + 1; x++) {
@@ -779,13 +779,13 @@ do_play_instrument(struct obj* instr)
 
                     for (x = 0; x < (int) strlen(buf); x++)
                         if (x < 5) {
-                            if (buf[x] == g.tune[x]) {
+                            if (buf[x] == gt.tune[x]) {
                                 gears++;
                                 matched[x] = TRUE;
                             } else {
                                 for (y = 0; y < 5; y++)
-                                    if (!matched[y] && buf[x] == g.tune[y]
-                                        && buf[y] != g.tune[y]) {
+                                    if (!matched[y] && buf[x] == gt.tune[y]
+                                        && buf[y] != gt.tune[y]) {
                                         tumblers++;
                                         matched[y] = TRUE;
                                         break;

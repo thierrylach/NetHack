@@ -58,8 +58,9 @@ nhlib.lua     opthelp       optmenu       oracle.lua    oracles.txt
 orcus.lua     quest.lua     rumors.fal    rumors.tru    sanctum.lua
 soko1-1.lua   soko1-2.lua   soko2-1.lua   soko2-2.lua   soko3-1.lua
 soko3-2.lua   soko4-1.lua   soko4-2.lua   symbols       themerms.lua
-tower1.lua    tower2.lua    tower3.lua    tribute       valley.lua
-water.lua     wizard1.lua   wizard2.lua   wizard3.lua   wizhelp
+tower1.lua    tower2.lua    tower3.lua    tribute       usagehlp
+valley.lua    water.lua     wizard1.lua   wizard2.lua   wizard3.lua
+wizhelp
 
 doc:
 (files for all versions)
@@ -125,10 +126,6 @@ wceconf.h
 (files for various Macintosh versions)
 mac-carbon.h  mac-qt.h      mac-term.h    macconf.h     macpopup.h
 mactty.h      macwin.h      mttypriv.h
-
-outdated/sys:
-(files that are no longer maintained for current game code)
-share
 
 outdated/sys/amiga:
 (files for Amiga versions - untested for 3.7)
@@ -258,7 +255,7 @@ write.c     zap.c
 
 submodules:
 (files in top directory)
-lua       pdcurses
+lua          pdcurses     pdcursesmod
 
 sys/libnh:
 (files in top directory)
@@ -271,15 +268,21 @@ README.md  libtest.c  run.sh
 sys/msdos:
 (files for MSDOS version)
 Install.dos              Makefile.GCC             exceptn.S.patch
-fetch-cross-compiler.sh  msdos.c                  msdoshlp.txt
-nhlua.h                  pckeys.c                 pctiles.c
-pctiles.h                pcvideo.h                portio.h
-setup.bat                sysconf                  tile2bin.c
-vesa.h                   video.c                  vidtxt.c
-vidvesa.c                vidvga.c
+fetch-cross-compiler.sh  font.c                   font.h
+msdos.c                  msdoshlp.txt             nhlua.h
+pckeys.c                 pctiles.c                pctiles.h
+pcvideo.h                portio.h                 setup.bat
+sysconf                  tile2bin.c               vesa.h
+video.c                  vidtxt.c                 vidvesa.c
+vidvga.c
 
 (files for running MSDOS binary under Windows)
 nhico.uu  nhpif.uu
+
+sys/msdos/fonts:
+(files for MSDOS version)
+README.txt    makefont.lua  nh-u16b.bdf   nh-u16v.bdf   nh-u18b.bdf
+nh-u20b.bdf   nh-u22b.bdf   nh-u24b.bdf   nh-u28b.bdf   nh-u32b.bdf
 
 sys/share:
 (Berkeley random number file, which may be included in any version)
@@ -351,7 +354,7 @@ unix
 sys/unix/hints/include:
 (files for configuring UNIX NetHack versions)
 compiler.370      cross-post.370    cross-pre.370     gbdates-post.370
-gbdates-pre.370   multiw-1.370      multiw-2.370
+gbdates-pre.370   multiw-1.370      multiw-2.370      multiw-3.370
 
 sys/vms:
 (files for VMS version)
@@ -366,9 +369,9 @@ sys/windows:
 Makefile.mingw32.depend  Makefile.nmake           console.rc
 consoletty.c             nethack.def              nhico.uu
 nhsetup.bat              ntsound.c                porthelp
-stubs.c                  sysconf.template         win10.c
-win10.h                  win32api.h               windmain.c
-windsys.c                winos.h
+sysconf.template         win10.c                  win10.h
+win32api.h               windmain.c               windsys.c
+winos.h
 
 sys/windows/vs:
 (files for Visual Studio 2017 or 2019 or 2022 Community Edition builds)

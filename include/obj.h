@@ -84,14 +84,24 @@ struct obj {
 #define NOBJ_STATES 9
     xint16 timed; /* # of fuses (timers) attached to this obj */
 
-    Bitfield(cursed, 1);
+    Bitfield(cursed, 1);    /* uncursed when neither cursed nor blessed */
     Bitfield(blessed, 1);
-    Bitfield(unpaid, 1);    /* on some bill */
-    Bitfield(no_charge, 1); /* if shk shouldn't charge for this */
-    Bitfield(known, 1);     /* exact nature known */
-    Bitfield(dknown, 1);    /* color or text known */
-    Bitfield(bknown, 1);    /* blessing or curse known */
-    Bitfield(rknown, 1);    /* rustproof or not known */
+    Bitfield(unpaid, 1);    /* owned by shop; valid for objects in hero's
+                             * inventory or inside containers there; also,
+                             * used for items on the floor only on the shop
+                             * boundary (including "free spot") or if moved
+                             * from there to inside by wall repairs */
+    Bitfield(no_charge, 1); /* if shk shouldn't charge for this; valid for
+                             * items on shop floor or in containers there;
+                             * implicit for items at any other location
+                             * unless carried and explicitly flagged unpaid */
+    Bitfield(known, 1);     /* exact nature known (for instance, charge count
+                             * or enchantment); many items have this preset if
+                             * they lack anything interesting to discover */
+    Bitfield(dknown, 1);    /* description known (item seen "up close");
+                             * some types of items always have dknown set */
+    Bitfield(bknown, 1);    /* BUC (blessed/uncursed/cursed) known */
+    Bitfield(rknown, 1);    /* rustproofing status known */
 
     Bitfield(oeroded, 2);  /* rusted/burnt weapon/armor */
     Bitfield(oeroded2, 2); /* corroded/rotted weapon/armor */
@@ -288,7 +298,7 @@ struct obj {
 /* Eggs and other food */
 #define MAX_EGG_HATCH_TIME 200 /* longest an egg can remain unhatched */
 #define stale_egg(egg) \
-    ((g.moves - (egg)->age) > (2 * MAX_EGG_HATCH_TIME))
+    ((gm.moves - (egg)->age) > (2 * MAX_EGG_HATCH_TIME))
 #define ofood(o) ((o)->otyp == CORPSE || (o)->otyp == EGG || (o)->otyp == TIN)
     /* note: sometimes eggs and tins have special corpsenm values that
        shouldn't be used as an index into mons[]                       */
@@ -405,11 +415,17 @@ struct obj {
                        || (o)->otyp == POT_POLYMORPH)
 
 /* achievement tracking; 3.6.x did this differently */
-#define is_mines_prize(o) ((o)->o_id == g.context.achieveo.mines_prize_oid)
-#define is_soko_prize(o) ((o)->o_id == g.context.achieveo.soko_prize_oid)
+#define is_mines_prize(o) ((o)->o_id == gc.context.achieveo.mines_prize_oid)
+#define is_soko_prize(o) ((o)->o_id == gc.context.achieveo.soko_prize_oid)
 
 #define is_art(o,art) ((o) && (o)->oartifact == (art))
 #define u_wield_art(art) is_art(uwep, art)
+
+/* mummy wrappings are more versatile sizewise than other cloaks */
+#define WrappingAllowed(mptr) \
+    (humanoid(mptr) && (mptr)->msize >= MZ_SMALL && (mptr)->msize <= MZ_HUGE \
+     && !noncorporeal(mptr) && (mptr)->mlet != S_CENTAUR                     \
+     && (mptr) != &mons[PM_WINGED_GARGOYLE] && (mptr) != &mons[PM_MARILITH])
 
 /* Flags for get_obj_location(). */
 #define CONTAINED_TOO 0x1

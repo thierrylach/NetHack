@@ -26,6 +26,7 @@
 #define LICENSE "license"       /* file with license information */
 #define OPTIONFILE "opthelp"    /* file explaining runtime options */
 #define OPTMENUHELP "optmenu"   /* file explaining #options command */
+#define USAGEHELP "usagehlp"    /* file explaining command line use */
 #define OPTIONS_USED "options"  /* compile-time options, for #version */
 #define SYMBOLS "symbols"       /* replacement symbol sets */
 #define EPITAPHFILE "epitaph"   /* random epitaphs on graves */
@@ -253,17 +254,17 @@ typedef uchar nhsym;
 #endif
 
 #if defined(X11_GRAPHICS) || defined(QT_GRAPHICS) || defined(GNOME_GRAPHICS) \
-    || defined(WIN32)
+    || defined(MSWIN_GRAPHICS)
 #ifndef NO_TILE_C
-#ifndef USE_TILES
-#define USE_TILES /* glyphmap[] with prefilled tile mappings will be available */
+#ifndef TILES_IN_GLYPHMAP
+#define TILES_IN_GLYPHMAP
 #endif
 #endif
 #endif
 #if defined(AMII_GRAPHICS) || defined(GEM_GRAPHICS)
 #ifndef NO_TILE_C
-#ifndef USE_TILES
-#define USE_TILES
+#ifndef TILES_IN_GLYPHMAP
+#define TILES_IN_GLYPHMAP
 #endif
 #endif
 #endif
@@ -404,7 +405,7 @@ extern struct nomakedefs_s nomakedefs;
 
 #define BUFSZ 256  /* for getlin buffers */
 #define QBUFSZ 128 /* for building question text */
-#define TBUFSZ 300 /* g.toplines[] buffer max msg: 3 81char names */
+#define TBUFSZ 300 /* gt.toplines[] buffer max msg: 3 81char names */
 /* plus longest prefix plus a few extra words */
 
 /* COLBUFSZ is the larger of BUFSZ and COLNO */
