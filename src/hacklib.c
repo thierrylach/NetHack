@@ -1197,10 +1197,19 @@ phase_of_the_moon(void) /* 0-7, with 0: new, 4: full */
 boolean
 friday_13th(void)
 {
-    register struct tm *lt = getlt();
+    register struct tm* lt = getlt();
 
     /* tm_wday (day of week; 0==Sunday) == 5 => Friday */
-    return (boolean) (lt->tm_wday == 5 && lt->tm_mday == 13);
+    return (boolean)(lt->tm_wday == 5 && lt->tm_mday == 13);
+}
+boolean
+august_8th(void)
+{
+    register struct tm* lt = getlt();
+
+    /* tm_mon (months since January) january = 0, august = 7 */
+    /* tm_wday (day of week; 0==Sunday) == 5 => Friday */
+    return (boolean)(lt->tm_mon == 7 && lt->tm_mday == 8);
 }
 
 int

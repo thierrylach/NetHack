@@ -32,6 +32,7 @@ struct flag {
 #define discover flags.explore
     boolean female;
     boolean friday13;        /* it's Friday the 13th */
+    boolean august8;         /* it's August the 8th */
     boolean goldX;           /* for BUCX filtering, whether gold is X or U */
     boolean help;            /* look in data file for info about stuff */
     boolean ignintr;         /* ignore interrupts */

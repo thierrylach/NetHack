@@ -57,6 +57,11 @@ moveloop_preamble(boolean resuming)
         pline("Watch out!  Bad things can happen on Friday the 13th.");
         change_luck(-1);
     }
+    flags.august8 = august_8th();
+    if (flags.august8) {
+        pline("Galactic New Year today!  Good things can happen on August the 8th.");
+        change_luck(1);
+    }
 
     if (!resuming) { /* new game */
         gc.context.rndencode = rnd(9000);
