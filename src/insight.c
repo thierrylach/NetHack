@@ -617,11 +617,27 @@ background_enlightenment(int unused_mode UNUSED, int final)
            days later if the game has been paused without save/restore),
            so phrase this similar to the start up message */
         Sprintf(buf, " Bad things %s on Friday the 13th.",
-                !final ? "can happen"
-                : (final == ENL_GAMEOVERALIVE) ? "could have happened"
-                  /* there's no may to tell whether -1 Luck made a
-                     difference but hero has died... */
-                  : "happened");
+            !final ? "can happen"
+            : (final == ENL_GAMEOVERALIVE) ? "could have happened"
+            /* there's no may to tell whether -1 Luck made a
+               difference but hero has died... */
+            : "happened");
+        enlght_out(buf);
+    }
+
+    if (flags.august8) {
+        /* similar to friday 13th:
+           let player know that august8 bonus is/was in effect;
+           we don't say "it is/was August the 8th" because that was at
+           the start of the session and it might be past midnight (or
+           days later if the game has been paused without save/restore),
+           so phrase this similar to the start up message */
+        Sprintf(buf, " Good things %s on August the 8th.",
+            !final ? "can happen"
+            : (final == ENL_GAMEOVERALIVE) ? "could have happened"
+            /* there's no may to tell whether 1 Luck made a
+               difference but hero has died... */
+            : "happened");
         enlght_out(buf);
     }
 

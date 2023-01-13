@@ -140,8 +140,11 @@ dosave0(void)
     /* undo date-dependent luck adjustments made at startup time */
     if (flags.moonphase == FULL_MOON) /* ut-sally!fletcher */
         change_luck(-1);              /* and unido!ab */
+    /* TODO Shouldn't there be an undo for NEW_MOON also? */
     if (flags.friday13)
         change_luck(1);
+    if (flags.august8)
+        change_luck(-1);
     if (iflags.window_inited)
         HUP clear_nhwindow(WIN_MESSAGE);
 

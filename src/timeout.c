@@ -550,6 +550,8 @@ nh_timeout(void)
 
     if (flags.friday13)
         baseluck -= 1;
+    if (flags.august8)
+        baseluck += 1;
 
     if (gq.quest_status.killed_leader)
         baseluck -= 4;
